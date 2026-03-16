@@ -53,8 +53,19 @@ namespace
 
   mitk::IPreferences* GetPreferences()
   {
-    auto preferencesService = mitk::CoreServices::GetPreferencesService();
-    return preferencesService->GetSystemPreferences()->Node("org.mitk.views.segmentation");
+    auto* preferencesService = mitk::CoreServices::GetPreferencesService();
+    if (nullptr == preferencesService)
+    {
+      return nullptr;
+    }
+
+    auto* systemPreferences = preferencesService->GetSystemPreferences();
+    if (nullptr == systemPreferences)
+    {
+      return nullptr;
+    }
+
+    return systemPreferences->Node("/org.mitk.views.segmentation");
   }
 }
 
