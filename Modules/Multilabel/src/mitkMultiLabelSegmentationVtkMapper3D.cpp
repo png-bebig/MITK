@@ -381,11 +381,23 @@ namespace
 {
   bool IsGPUMapperSupported(mitk::BaseRenderer* renderer)
   {
+    if (renderer == nullptr
+      || renderer->GetVtkRenderer() == nullptr
+      || renderer->GetVtkRenderer()->GetRenderWindow() == nullptr)
+    {
+      return false;
+    }
+
     vtkNew<vtkImageData> tiny;
     tiny->SetDimensions(2, 2, 2);
     tiny->AllocateScalars(VTK_UNSIGNED_CHAR, 1);
 
-    vtkNew<vtkGPUVolumeRayCastMapper> mapper;
+    auto mapper = vtkSmartPointer<vtkGPUVolumeRayCastMapper>::New();
+    if (mapper == nullptr)
+    {
+      return false;
+    }
+
     mapper->SetInputData(tiny);
 
     bool supported = (0 != mapper->IsRenderSupported(renderer->GetVtkRenderer()->GetRenderWindow(), nullptr));
