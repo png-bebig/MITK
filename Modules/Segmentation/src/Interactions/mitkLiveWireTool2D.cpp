@@ -18,6 +18,7 @@ found in the LICENSE file.
 #include <usGetModuleContext.h>
 #include <usModuleResource.h>
 
+#include <algorithm>
 #include <type_traits>
 
 namespace mitk
@@ -26,7 +27,11 @@ namespace mitk
 }
 
 mitk::LiveWireTool2D::LiveWireTool2D()
-  : EditableContourTool(), m_CreateAndUseDynamicCosts(false)
+  : EditableContourTool()
+  , m_CreateAndUseDynamicCosts(false)
+  , m_EdgeLowerThreshold(15.0)
+  , m_EdgeUpperThreshold(30.0)
+  , m_EdgeVariance(4.0)
 {
 }
 
@@ -53,6 +58,20 @@ us::ModuleResource mitk::LiveWireTool2D::GetCursorIconResource() const
 const char *mitk::LiveWireTool2D::GetName() const
 {
   return "Live Wire";
+}
+
+void mitk::LiveWireTool2D::SetEdgeDetectorParameters(double lowerThreshold, double upperThreshold, double variance)
+{
+  m_EdgeLowerThreshold = std::max(0.0, lowerThreshold);
+  m_EdgeUpperThreshold = std::max(m_EdgeLowerThreshold, upperThreshold);
+  m_EdgeVariance = std::max(0.01, variance);
+  this->ApplyEdgeDetectorParameters();
+}
+
+void mitk::LiveWireTool2D::ApplyEdgeDetectorParameters()
+{
+  if (m_LiveWireFilter.IsNotNull())
+    m_LiveWireFilter->SetCannyEdgeParameters(m_EdgeLowerThreshold, m_EdgeUpperThreshold, m_EdgeVariance);
 }
 
 void mitk::LiveWireTool2D::UpdateLiveWireContour()
@@ -98,6 +117,7 @@ mitk::Point3D mitk::LiveWireTool2D::PrepareInitContour(const mitk::Point3D& clic
   // Set current slice as input for ImageToLiveWireContourModelFilter
   m_LiveWireFilter = ImageLiveWireContourModelFilter::New();
   m_LiveWireFilter->SetUseCostFunction(true);
+  this->ApplyEdgeDetectorParameters();
   m_LiveWireFilter->SetInput(m_ReferenceDataSlice);
 
   itk::Index<3> idx;
@@ -167,6 +187,7 @@ void mitk::LiveWireTool2D::FinishTool()
   m_ContourInteractor->LoadStateMachine("ContourModelModificationInteractor.xml", us::GetModuleContext()->GetModule());
   m_ContourInteractor->SetEventConfig("ContourModelModificationConfig.xml", us::GetModuleContext()->GetModule());
   m_ContourInteractor->SetWorkingImage(this->m_ReferenceDataSlice);
+  m_ContourInteractor->SetEdgeDetectorParameters(m_EdgeLowerThreshold, m_EdgeUpperThreshold, m_EdgeVariance);
   m_ContourInteractor->SetRestrictedArea(this->m_CurrentRestrictedArea);
 
   m_ContourNode->SetDataInteractor(m_ContourInteractor.GetPointer());

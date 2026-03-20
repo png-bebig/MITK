@@ -47,6 +47,10 @@ namespace mitk
      * \param[in] _arg Pointer to the image slice for the LiveWire filter.
      */
     virtual void SetWorkingImage(mitk::Image *_arg);
+    void SetEdgeDetectorParameters(double lowerThreshold, double upperThreshold, double variance);
+    double GetEdgeLowerThreshold() const { return m_EdgeLowerThreshold; }
+    double GetEdgeUpperThreshold() const { return m_EdgeUpperThreshold; }
+    double GetEdgeVariance() const { return m_EdgeVariance; }
 
     void ConnectActionsAndFunctions() override;
 
@@ -78,6 +82,9 @@ namespace mitk
 
     mitk::ImageLiveWireContourModelFilter::Pointer m_LiveWireFilter;
     mitk::Image::Pointer m_WorkingSlice;
+    double m_EdgeLowerThreshold = 15.0;
+    double m_EdgeUpperThreshold = 30.0;
+    double m_EdgeVariance = 4.0;
 
     mitk::Point3D m_NextActiveVertexDown;
     mitk::Point3D m_NextActiveVertexUp;
