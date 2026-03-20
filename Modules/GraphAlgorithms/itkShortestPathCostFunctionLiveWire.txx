@@ -15,7 +15,9 @@ found in the LICENSE file.
 
 #include "itkShortestPathCostFunctionLiveWire.h"
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 
 #include <itkCannyEdgeDetectionImageFilter.h>
 #include <itkCastImageFilter.h>
@@ -29,8 +31,41 @@ namespace itk
 {
   // Constructor
   template <class TInputImageType>
-  ShortestPathCostFunctionLiveWire<TInputImageType>::ShortestPathCostFunctionLiveWire(): m_MinCosts(0.0), m_UseRepulsivePoints(false), m_GradientMax(0.0), m_Initialized(false),  m_UseCostMap(false), m_MaxMapCosts(-1.0)
+  ShortestPathCostFunctionLiveWire<TInputImageType>::ShortestPathCostFunctionLiveWire()
+    : m_MinCosts(0.0)
+    , m_UseRepulsivePoints(false)
+    , m_GradientMax(0.0)
+    , m_Initialized(false)
+    , m_UseCostMap(false)
+    , m_MaxMapCosts(-1.0)
+    , m_CannyLowerThreshold(15.0)
+    , m_CannyUpperThreshold(30.0)
+    , m_CannyVariance(4.0)
   {
+  }
+
+  template <class TInputImageType>
+  void ShortestPathCostFunctionLiveWire<TInputImageType>::SetCannyEdgeParameters(
+    double lowerThreshold,
+    double upperThreshold,
+    double variance)
+  {
+    const auto safeLower = std::max(0.0, lowerThreshold);
+    const auto safeUpper = std::max(safeLower, upperThreshold);
+    const auto safeVariance = std::max(0.01, variance);
+
+    if (this->m_CannyLowerThreshold == safeLower &&
+        this->m_CannyUpperThreshold == safeUpper &&
+        this->m_CannyVariance == safeVariance)
+    {
+      return;
+    }
+
+    this->m_CannyLowerThreshold = safeLower;
+    this->m_CannyUpperThreshold = safeUpper;
+    this->m_CannyVariance = safeVariance;
+    this->m_Initialized = false;
+    this->Modified();
   }
 
   template <class TInputImageType>
@@ -91,18 +126,13 @@ namespace itk
         return 1000;
     }
 
-    double gradientX, gradientY;
-    gradientX = gradientY = 0.0;
-
     double gradientCost;
 
     double gradientMagnitude;
 
     // Gradient Magnitude costs
     gradientMagnitude = this->m_GradientMagnitudeImage->GetPixel(p2);
-    gradientX = m_GradientImage->GetPixel(p2)[0];
-    gradientY = m_GradientImage->GetPixel(p2)[1];
-
+    const auto safeGradientMax = std::max(m_GradientMax, std::numeric_limits<double>::epsilon());
     if (m_UseCostMap && !m_CostMap.empty())
     {
       std::map<int, int>::iterator end = m_CostMap.end();
@@ -199,13 +229,13 @@ namespace itk
       }
       else
       { // use linear mapping
-        gradientCost = 1.0 - (gradientMagnitude / m_GradientMax);
+        gradientCost = 1.0 - (gradientMagnitude / safeGradientMax);
       }
     }
     else
     { // use linear mapping
       // value between 0 (good) and 1 (bad)
-      gradientCost = 1.0 - (gradientMagnitude / m_GradientMax);
+      gradientCost = 1.0 - (gradientMagnitude / safeGradientMax);
     }
 
     //  Laplacian zero crossing costs
@@ -227,29 +257,47 @@ namespace itk
 
     // gradient vector at p1
     double nGradientAtP1[2];
-    nGradientAtP1[0] = gradientX; // previously computed for gradient magnitude
-    nGradientAtP1[1] = gradientY;
+    nGradientAtP1[0] = m_GradientImage->GetPixel(p1)[0];
+    nGradientAtP1[1] = m_GradientImage->GetPixel(p1)[1];
 
     // gradient direction unit vector of p1
-    nGradientAtP1[0] /= gradientMagnitude;
-    nGradientAtP1[1] /= gradientMagnitude;
+    const auto gradientMagnitudeAtP1 = m_GradientMagnitudeImage->GetPixel(p1);
+    if (gradientMagnitudeAtP1 > std::numeric_limits<double>::epsilon())
+    {
+      nGradientAtP1[0] /= gradientMagnitudeAtP1;
+      nGradientAtP1[1] /= gradientMagnitudeAtP1;
+    }
+    else
+    {
+      nGradientAtP1[0] = 0.0;
+      nGradientAtP1[1] = 0.0;
+    }
     //-------
 
-    // gradient vector at p1
+    // gradient vector at p2
     double nGradientAtP2[2];
 
     nGradientAtP2[0] = m_GradientImage->GetPixel(p2)[0];
     nGradientAtP2[1] = m_GradientImage->GetPixel(p2)[1];
 
-    nGradientAtP2[0] /= m_GradientMagnitudeImage->GetPixel(p2);
-    nGradientAtP2[1] /= m_GradientMagnitudeImage->GetPixel(p2);
+    const auto gradientMagnitudeAtP2 = m_GradientMagnitudeImage->GetPixel(p2);
+    if (gradientMagnitudeAtP2 > std::numeric_limits<double>::epsilon())
+    {
+      nGradientAtP2[0] /= gradientMagnitudeAtP2;
+      nGradientAtP2[1] /= gradientMagnitudeAtP2;
+    }
+    else
+    {
+      nGradientAtP2[0] = 0.0;
+      nGradientAtP2[1] = 0.0;
+    }
 
     double scalarProduct = (nGradientAtP1[0] * nGradientAtP2[0]) + (nGradientAtP1[1] * nGradientAtP2[1]);
-    if (std::abs(scalarProduct) >= 1.0)
-    {
-      // this should probably not happen; make sure the input for acos is valid
-      scalarProduct = 0.999999999;
-    }
+    if (!std::isfinite(scalarProduct))
+      scalarProduct = 0.0;
+
+    // Make sure acos receives a valid range while preserving the sign.
+    scalarProduct = std::clamp(scalarProduct, -0.999999999, 0.999999999);
 
     double gradientDirectionCost = acos(scalarProduct) / 3.14159265;
 
@@ -355,9 +403,9 @@ namespace itk
       typename CannyEdgeDetectionImageFilterType::Pointer cannyEdgeDetectionfilter =
         CannyEdgeDetectionImageFilterType::New();
       cannyEdgeDetectionfilter->SetInput(castFilter->GetOutput());
-      cannyEdgeDetectionfilter->SetUpperThreshold(30);
-      cannyEdgeDetectionfilter->SetLowerThreshold(15);
-      cannyEdgeDetectionfilter->SetVariance(4);
+      cannyEdgeDetectionfilter->SetUpperThreshold(this->m_CannyUpperThreshold);
+      cannyEdgeDetectionfilter->SetLowerThreshold(this->m_CannyLowerThreshold);
+      cannyEdgeDetectionfilter->SetVariance(this->m_CannyVariance);
       cannyEdgeDetectionfilter->SetMaximumError(.01f);
 
       cannyEdgeDetectionfilter->Update();

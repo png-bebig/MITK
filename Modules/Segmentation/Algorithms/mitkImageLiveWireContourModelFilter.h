@@ -110,6 +110,11 @@ namespace mitk
 
     void SetUseCostFunction(bool doUseCostFunction) { m_ShortestPathFilter->SetUseCostFunction(doUseCostFunction); };
 
+    void SetCannyEdgeParameters(double lowerThreshold, double upperThreshold, double variance);
+    double GetCannyLowerThreshold() const;
+    double GetCannyUpperThreshold() const;
+    double GetCannyVariance() const;
+
   protected:
     ImageLiveWireContourModelFilter();
 

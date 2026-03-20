@@ -50,6 +50,10 @@ namespace mitk
     us::ModuleResource GetCursorIconResource() const override;
     us::ModuleResource GetIconResource() const override;
     const char *GetName() const override;
+    void SetEdgeDetectorParameters(double lowerThreshold, double upperThreshold, double variance);
+    double GetEdgeLowerThreshold() const { return m_EdgeLowerThreshold; }
+    double GetEdgeUpperThreshold() const { return m_EdgeUpperThreshold; }
+    double GetEdgeVariance() const { return m_EdgeVariance; }
 
   protected:
     LiveWireTool2D();
@@ -66,6 +70,7 @@ namespace mitk
     virtual void UpdatePreviewContour(const Point3D& clickedPoint) override;
 
   private:
+    void ApplyEdgeDetectorParameters();
 
     /// \brief Don't use dynamic cost map for LiveWire calculation.
     void OnMouseMoveNoDynamicCosts(StateMachineAction *, InteractionEvent *interactionEvent);
@@ -83,6 +88,9 @@ namespace mitk
     mitk::ImageLiveWireContourModelFilter::Pointer m_LiveWireFilter;
 
     bool m_CreateAndUseDynamicCosts;
+    double m_EdgeLowerThreshold;
+    double m_EdgeUpperThreshold;
+    double m_EdgeVariance;
   };
 }
 
