@@ -193,6 +193,16 @@ double mitk::ImageLiveWireContourModelFilter::GetCannyVariance() const
   return m_CostFunction->GetCannyVariance();
 }
 
+void mitk::ImageLiveWireContourModelFilter::SetSpatialDistanceWeight(double weight)
+{
+  m_CostFunction->SetSpatialDistanceWeight(weight);
+}
+
+double mitk::ImageLiveWireContourModelFilter::GetSpatialDistanceWeight() const
+{
+  return m_CostFunction->GetSpatialDistanceWeight();
+}
+
 void mitk::ImageLiveWireContourModelFilter::UpdateLiveWire()
 {
   // compute the requested region for itk filters
