@@ -132,6 +132,8 @@ namespace mitk
     double GetCannyLowerThreshold() const;
     double GetCannyUpperThreshold() const;
     double GetCannyVariance() const;
+    void SetSpatialDistanceWeight(double weight);
+    double GetSpatialDistanceWeight() const;
 
   protected:
     ImageLiveWireContourModelFilter();

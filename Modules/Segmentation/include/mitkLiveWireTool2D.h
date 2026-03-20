@@ -59,6 +59,8 @@ namespace mitk
     double GetEdgeLowerThreshold() const { return m_EdgeLowerThreshold; }
     double GetEdgeUpperThreshold() const { return m_EdgeUpperThreshold; }
     double GetEdgeVariance() const { return m_EdgeVariance; }
+    void SetSpatialDistanceWeight(double weight);
+    double GetSpatialDistanceWeight() const { return m_SpatialDistanceWeight; }
 
   protected:
     LiveWireTool2D();
@@ -109,6 +111,7 @@ namespace mitk
     double m_EdgeLowerThreshold;
     double m_EdgeUpperThreshold;
     double m_EdgeVariance;
+    double m_SpatialDistanceWeight;
   };
 }
 

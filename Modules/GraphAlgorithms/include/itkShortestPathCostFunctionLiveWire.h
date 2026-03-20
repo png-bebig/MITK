@@ -185,6 +185,8 @@ namespace itk
     double GetCannyLowerThreshold() const { return this->m_CannyLowerThreshold; }
     double GetCannyUpperThreshold() const { return this->m_CannyUpperThreshold; }
     double GetCannyVariance() const { return this->m_CannyVariance; }
+    itkSetClampMacro(SpatialDistanceWeight, double, 0.0, 1.0);
+    itkGetConstMacro(SpatialDistanceWeight, double);
 
     /**
      * \brief Set the maximum value of the dynamic cost map.
@@ -278,6 +280,7 @@ namespace itk
     double m_CannyLowerThreshold;
     double m_CannyUpperThreshold;
     double m_CannyVariance;
+    double m_SpatialDistanceWeight;
 
   private:
     double SigmoidFunction(double I, double max, double min, double alpha, double beta);

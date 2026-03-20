@@ -29,6 +29,7 @@ mitk::ContourModelLiveWireInteractor::ContourModelLiveWireInteractor() : Contour
   m_LiveWireFilter = mitk::ImageLiveWireContourModelFilter::New();
   m_LiveWireFilter->SetUseCostFunction(true);
   this->SetEdgeDetectorParameters(m_EdgeLowerThreshold, m_EdgeUpperThreshold, m_EdgeVariance);
+  this->SetSpatialDistanceWeight(m_SpatialDistanceWeight);
   m_NextActiveVertexDown.Fill(0);
   m_NextActiveVertexUp.Fill(0);
 }
@@ -100,6 +101,14 @@ void mitk::ContourModelLiveWireInteractor::SetEdgeDetectorParameters(
 
   if (m_LiveWireFilter.IsNotNull())
     m_LiveWireFilter->SetCannyEdgeParameters(m_EdgeLowerThreshold, m_EdgeUpperThreshold, m_EdgeVariance);
+}
+
+void mitk::ContourModelLiveWireInteractor::SetSpatialDistanceWeight(double weight)
+{
+  m_SpatialDistanceWeight = std::clamp(weight, 0.0, 1.0);
+
+  if (m_LiveWireFilter.IsNotNull())
+    m_LiveWireFilter->SetSpatialDistanceWeight(m_SpatialDistanceWeight);
 }
 
 void mitk::ContourModelLiveWireInteractor::OnAddPoint(StateMachineAction* sm, InteractionEvent* interactionEvent)

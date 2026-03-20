@@ -32,6 +32,7 @@ mitk::LiveWireTool2D::LiveWireTool2D()
   , m_EdgeLowerThreshold(15.0)
   , m_EdgeUpperThreshold(30.0)
   , m_EdgeVariance(4.0)
+  , m_SpatialDistanceWeight(0.0)
 {
 }
 
@@ -68,10 +69,19 @@ void mitk::LiveWireTool2D::SetEdgeDetectorParameters(double lowerThreshold, doub
   this->ApplyEdgeDetectorParameters();
 }
 
+void mitk::LiveWireTool2D::SetSpatialDistanceWeight(double weight)
+{
+  m_SpatialDistanceWeight = std::clamp(weight, 0.0, 1.0);
+  this->ApplyEdgeDetectorParameters();
+}
+
 void mitk::LiveWireTool2D::ApplyEdgeDetectorParameters()
 {
   if (m_LiveWireFilter.IsNotNull())
+  {
     m_LiveWireFilter->SetCannyEdgeParameters(m_EdgeLowerThreshold, m_EdgeUpperThreshold, m_EdgeVariance);
+    m_LiveWireFilter->SetSpatialDistanceWeight(m_SpatialDistanceWeight);
+  }
 }
 
 void mitk::LiveWireTool2D::UpdateLiveWireContour()
@@ -188,6 +198,7 @@ void mitk::LiveWireTool2D::FinishTool()
   m_ContourInteractor->SetEventConfig("ContourModelModificationConfig.xml", us::GetModuleContext()->GetModule());
   m_ContourInteractor->SetWorkingImage(this->m_ReferenceDataSlice);
   m_ContourInteractor->SetEdgeDetectorParameters(m_EdgeLowerThreshold, m_EdgeUpperThreshold, m_EdgeVariance);
+  m_ContourInteractor->SetSpatialDistanceWeight(m_SpatialDistanceWeight);
   m_ContourInteractor->SetRestrictedArea(this->m_CurrentRestrictedArea);
 
   m_ContourNode->SetDataInteractor(m_ContourInteractor.GetPointer());
