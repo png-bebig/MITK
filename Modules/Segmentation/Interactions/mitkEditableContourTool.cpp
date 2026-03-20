@@ -54,8 +54,9 @@ void mitk::EditableContourTool::ConfirmSegmentation(bool resetStatMachine)
 {
   auto referenceImage = this->GetReferenceData();
   auto workingSeg = this->GetWorkingData();
+  auto* workingNode = this->GetWorkingDataNode();
 
-  if (nullptr != referenceImage && nullptr != workingSeg)
+  if (nullptr != referenceImage && nullptr != workingSeg && nullptr != workingNode)
   {
     std::vector<SliceInformation> sliceInfos;
 
@@ -67,10 +68,30 @@ void mitk::EditableContourTool::ConfirmSegmentation(bool resetStatMachine)
     if (nullptr == contour || contour->IsEmpty())
       return;
 
-    auto slice = this->GenerateSliceWithContourUpdate(workingSeg, m_PlaneGeometry, contour, workingSeg->GetActiveLabel()->GetValue(), currentTimePoint, m_AddMode);
+    auto* activeLabel = workingSeg->GetActiveLabel();
+    if (nullptr == activeLabel)
+      return;
+
+    auto slice = this->GenerateSliceWithContourUpdate(
+      workingSeg,
+      m_PlaneGeometry,
+      contour,
+      activeLabel->GetValue(),
+      currentTimePoint,
+      m_AddMode);
     sliceInfos.emplace_back(slice, m_PlaneGeometry, workingImageTimeStep);
 
-    this->WriteBackSegmentationResults(sliceInfos);
+    if (nullptr != m_LastEventSender)
+    {
+      this->WriteBackSegmentationResults(sliceInfos);
+    }
+    else
+    {
+      // Fall back to direct writeback when no interaction sender is retained.
+      // Without this fallback, helper contours are removed but no segmentation
+      // update is committed.
+      SegTool2D::WriteBackSegmentationResults(workingNode, sliceInfos, true, m_UndoEnabled, this->GetName());
+    }
   }
 
   this->ReleaseHelperObjects();
