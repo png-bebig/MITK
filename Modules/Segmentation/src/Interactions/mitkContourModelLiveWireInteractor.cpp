@@ -22,10 +22,13 @@ found in the LICENSE file.
 
 #include <mitkIOUtil.h>
 
+#include <algorithm>
+
 mitk::ContourModelLiveWireInteractor::ContourModelLiveWireInteractor() : ContourModelInteractor()
 {
   m_LiveWireFilter = mitk::ImageLiveWireContourModelFilter::New();
   m_LiveWireFilter->SetUseCostFunction(true);
+  this->SetEdgeDetectorParameters(m_EdgeLowerThreshold, m_EdgeUpperThreshold, m_EdgeVariance);
   m_NextActiveVertexDown.Fill(0);
   m_NextActiveVertexUp.Fill(0);
 }
@@ -84,6 +87,19 @@ void mitk::ContourModelLiveWireInteractor::SetWorkingImage(mitk::Image *_arg)
     this->m_WorkingSlice = _arg;
     this->m_LiveWireFilter->SetInput(this->m_WorkingSlice);
   }
+}
+
+void mitk::ContourModelLiveWireInteractor::SetEdgeDetectorParameters(
+  double lowerThreshold,
+  double upperThreshold,
+  double variance)
+{
+  m_EdgeLowerThreshold = std::max(0.0, lowerThreshold);
+  m_EdgeUpperThreshold = std::max(m_EdgeLowerThreshold, upperThreshold);
+  m_EdgeVariance = std::max(0.01, variance);
+
+  if (m_LiveWireFilter.IsNotNull())
+    m_LiveWireFilter->SetCannyEdgeParameters(m_EdgeLowerThreshold, m_EdgeUpperThreshold, m_EdgeVariance);
 }
 
 void mitk::ContourModelLiveWireInteractor::OnAddPoint(StateMachineAction* sm, InteractionEvent* interactionEvent)

@@ -170,6 +170,29 @@ void mitk::ImageLiveWireContourModelFilter::SetRepulsivePoints(const ShortestPat
   }
 }
 
+void mitk::ImageLiveWireContourModelFilter::SetCannyEdgeParameters(
+  double lowerThreshold,
+  double upperThreshold,
+  double variance)
+{
+  m_CostFunction->SetCannyEdgeParameters(lowerThreshold, upperThreshold, variance);
+}
+
+double mitk::ImageLiveWireContourModelFilter::GetCannyLowerThreshold() const
+{
+  return m_CostFunction->GetCannyLowerThreshold();
+}
+
+double mitk::ImageLiveWireContourModelFilter::GetCannyUpperThreshold() const
+{
+  return m_CostFunction->GetCannyUpperThreshold();
+}
+
+double mitk::ImageLiveWireContourModelFilter::GetCannyVariance() const
+{
+  return m_CostFunction->GetCannyVariance();
+}
+
 void mitk::ImageLiveWireContourModelFilter::UpdateLiveWire()
 {
   // compute the requested region for itk filters

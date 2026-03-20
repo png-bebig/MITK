@@ -181,6 +181,11 @@ namespace itk
      */
     void SetUseCostMap(bool useCostMap) { this->m_UseCostMap = useCostMap; }
 
+    void SetCannyEdgeParameters(double lowerThreshold, double upperThreshold, double variance);
+    double GetCannyLowerThreshold() const { return this->m_CannyLowerThreshold; }
+    double GetCannyUpperThreshold() const { return this->m_CannyUpperThreshold; }
+    double GetCannyVariance() const { return this->m_CannyVariance; }
+
     /**
      * \brief Set the maximum value of the dynamic cost map.
      *
@@ -269,6 +274,10 @@ namespace itk
     bool m_UseCostMap;
 
     double m_MaxMapCosts;
+
+    double m_CannyLowerThreshold;
+    double m_CannyUpperThreshold;
+    double m_CannyVariance;
 
   private:
     double SigmoidFunction(double I, double max, double min, double alpha, double beta);

@@ -55,6 +55,10 @@ namespace mitk
 
     /** \brief Return the human-readable name of this tool ("Live Wire"). */
     const char *GetName() const override;
+    void SetEdgeDetectorParameters(double lowerThreshold, double upperThreshold, double variance);
+    double GetEdgeLowerThreshold() const { return m_EdgeLowerThreshold; }
+    double GetEdgeUpperThreshold() const { return m_EdgeUpperThreshold; }
+    double GetEdgeVariance() const { return m_EdgeVariance; }
 
   protected:
     LiveWireTool2D();
@@ -84,6 +88,7 @@ namespace mitk
     virtual void UpdatePreviewContour(const Point3D& clickedPoint) override;
 
   private:
+    void ApplyEdgeDetectorParameters();
 
     /** \brief Handle mouse movement without updating the dynamic cost map. */
     void OnMouseMoveNoDynamicCosts(StateMachineAction *, InteractionEvent *interactionEvent);
@@ -101,6 +106,9 @@ namespace mitk
     mitk::ImageLiveWireContourModelFilter::Pointer m_LiveWireFilter;
 
     bool m_CreateAndUseDynamicCosts;
+    double m_EdgeLowerThreshold;
+    double m_EdgeUpperThreshold;
+    double m_EdgeVariance;
   };
 }
 
