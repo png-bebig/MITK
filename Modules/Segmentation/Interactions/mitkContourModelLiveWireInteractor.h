@@ -46,6 +46,8 @@ namespace mitk
     double GetEdgeLowerThreshold() const { return m_EdgeLowerThreshold; }
     double GetEdgeUpperThreshold() const { return m_EdgeUpperThreshold; }
     double GetEdgeVariance() const { return m_EdgeVariance; }
+    void SetSpatialDistanceWeight(double weight);
+    double GetSpatialDistanceWeight() const { return m_SpatialDistanceWeight; }
 
     void ConnectActionsAndFunctions() override;
 
@@ -80,6 +82,7 @@ namespace mitk
     double m_EdgeLowerThreshold = 15.0;
     double m_EdgeUpperThreshold = 30.0;
     double m_EdgeVariance = 4.0;
+    double m_SpatialDistanceWeight = 0.0;
 
     mitk::Point3D m_NextActiveVertexDown;
     mitk::Point3D m_NextActiveVertexUp;

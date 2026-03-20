@@ -41,6 +41,7 @@ namespace itk
     , m_CannyLowerThreshold(15.0)
     , m_CannyUpperThreshold(30.0)
     , m_CannyVariance(4.0)
+    , m_SpatialDistanceWeight(0.0)
   {
   }
 
@@ -314,6 +315,11 @@ namespace itk
       w3 = 0.05;
     }
     costs = w1 * laplacianCost + w2 * gradientCost + w3 * gradientDirectionCost;
+
+    // Blend in a constant per-step penalty so longer detours to distant edges
+    // are discouraged even when edge strength is higher.
+    const auto spatialDistanceWeight = std::clamp(this->m_SpatialDistanceWeight, 0.0, 1.0);
+    costs = ((1.0 - spatialDistanceWeight) * costs) + spatialDistanceWeight;
 
     // scale by euclidean distance
     double costScale;
