@@ -55,6 +55,8 @@ found in the LICENSE file.
 #include <itkRGBAPixel.h>
 #include <mitkRenderingModeProperty.h>
 
+#include <algorithm>
+
 namespace
 {
   bool IsBinaryImage(mitk::Image* image)
@@ -719,6 +721,38 @@ void mitk::ImageVtkMapper2D::Update(mitk::BaseRenderer *renderer)
   // since we have checked that nothing important has changed, we can set
   // m_LastUpdateTime to the current time
   localStorage->m_LastUpdateTime.Modified();
+}
+
+void mitk::ImageVtkMapper2D::ReleaseGraphicsResources(mitk::BaseRenderer* renderer)
+{
+  if (nullptr == renderer)
+    return;
+
+  const auto registeredRenderers = m_LSH.GetRegisteredBaseRenderer();
+  if (registeredRenderers.end() == std::find(registeredRenderers.begin(), registeredRenderers.end(), renderer))
+    return;
+
+  auto* localStorage = this->GetLocalStorage(renderer);
+  auto* renderWindow = renderer->GetRenderWindow();
+  if (nullptr != localStorage && nullptr != renderWindow)
+  {
+    if (nullptr != localStorage->m_PublicActors)
+      localStorage->m_PublicActors->ReleaseGraphicsResources(renderWindow);
+    if (nullptr != localStorage->m_Actors)
+      localStorage->m_Actors->ReleaseGraphicsResources(renderWindow);
+    if (nullptr != localStorage->m_EmptyActors)
+      localStorage->m_EmptyActors->ReleaseGraphicsResources(renderWindow);
+    if (nullptr != localStorage->m_ImageActor)
+      localStorage->m_ImageActor->ReleaseGraphicsResources(renderWindow);
+    if (nullptr != localStorage->m_ShadowOutlineActor)
+      localStorage->m_ShadowOutlineActor->ReleaseGraphicsResources(renderWindow);
+    if (nullptr != localStorage->m_Mapper)
+      localStorage->m_Mapper->ReleaseGraphicsResources(renderWindow);
+    if (nullptr != localStorage->m_Texture)
+      localStorage->m_Texture->ReleaseGraphicsResources(renderWindow);
+  }
+
+  m_LSH.ClearLocalStorage(renderer);
 }
 
 void mitk::ImageVtkMapper2D::SetDefaultProperties(mitk::DataNode *node, mitk::BaseRenderer *renderer, bool overwrite)

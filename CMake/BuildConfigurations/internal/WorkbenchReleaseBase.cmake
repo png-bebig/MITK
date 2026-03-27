@@ -29,7 +29,7 @@ if(NOT MITK_USE_SUPERBUILD)
   set(BUILD_ModelFitMiniApps ON CACHE BOOL "" FORCE)
 endif()
 
-set(MITK_VTK_DEBUG_LEAKS OFF CACHE BOOL "Enable VTK Debug Leaks" FORCE)
+set(MITK_VTK_DEBUG_LEAKS ON CACHE BOOL "Enable VTK Debug Leaks" FORCE)
 
 find_package(Doxygen REQUIRED)
 

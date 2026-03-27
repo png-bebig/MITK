@@ -182,6 +182,16 @@ namespace mitk
     */
     virtual void ReleaseGraphicsResources(vtkWindow *renWin);
 
+    /**
+    * \brief Irreversibly detach overlay text rendering from the render window.
+    *
+    * This is intended for final render-window shutdown while a valid graphics
+    * context is still current. It clears the renderer-owned text actors and
+    * detaches the hidden text renderer so VTK can free any pass/texture state
+    * before the window is finalized.
+    */
+    virtual void PrepareForShutdown(vtkWindow *renWin);
+
     MappersMapType GetMappersMap() const;
 
     static bool useImmediateModeRendering();

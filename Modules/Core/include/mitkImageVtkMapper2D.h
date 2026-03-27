@@ -126,9 +126,10 @@ namespace mitk
       /** \brief Get the Image to map */
       const mitk::Image *GetInput(void);
 
-      /** \brief Checks whether this mapper needs to update itself and generate
+    /** \brief Checks whether this mapper needs to update itself and generate
      * data. */
     void Update(mitk::BaseRenderer *renderer) override;
+    void ReleaseGraphicsResources(mitk::BaseRenderer *renderer) override;
 
     //### methods of MITK-VTK rendering pipeline
     vtkProp *GetVtkProp(mitk::BaseRenderer *renderer) override;

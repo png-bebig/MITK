@@ -83,6 +83,8 @@ public:
   bool GetActivateMenuWidgetFlag() { return m_MenuWidgetActivated; }
 
   void ShowOverlayMessage(bool show);
+  void PrepareForGraphicsShutdown();
+  void DestroyMitkRenderWindowBase();
 
   // Get it from the QVTKWidget parent
   vtkRenderWindow *GetVtkRenderWindow() override { return this->renderWindow(); }

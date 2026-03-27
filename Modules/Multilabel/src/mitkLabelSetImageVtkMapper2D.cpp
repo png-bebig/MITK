@@ -703,6 +703,51 @@ void mitk::LabelSetImageVtkMapper2D::Update(mitk::BaseRenderer *renderer)
   }
 }
 
+void mitk::LabelSetImageVtkMapper2D::ReleaseGraphicsResources(mitk::BaseRenderer* renderer)
+{
+  if (nullptr == renderer)
+    return;
+
+  const auto registeredRenderers = m_LSH.GetRegisteredBaseRenderer();
+  if (registeredRenderers.end() == std::find(registeredRenderers.begin(), registeredRenderers.end(), renderer))
+    return;
+
+  auto* localStorage = this->GetLocalStorage(renderer);
+  auto* renderWindow = renderer->GetRenderWindow();
+  if (nullptr != localStorage && nullptr != renderWindow)
+  {
+    if (nullptr != localStorage->m_Actors)
+      localStorage->m_Actors->ReleaseGraphicsResources(renderWindow);
+
+    for (auto& actor : localStorage->m_LayerActorVector)
+    {
+      if (nullptr != actor)
+        actor->ReleaseGraphicsResources(renderWindow);
+    }
+
+    for (auto& mapper : localStorage->m_LayerMapperVector)
+    {
+      if (nullptr != mapper)
+        mapper->ReleaseGraphicsResources(renderWindow);
+    }
+
+    for (auto& texture : localStorage->m_LayerTextureVector)
+    {
+      if (nullptr != texture)
+        texture->ReleaseGraphicsResources(renderWindow);
+    }
+
+    if (nullptr != localStorage->m_OutlineActor)
+      localStorage->m_OutlineActor->ReleaseGraphicsResources(renderWindow);
+    if (nullptr != localStorage->m_OutlineShadowActor)
+      localStorage->m_OutlineShadowActor->ReleaseGraphicsResources(renderWindow);
+    if (nullptr != localStorage->m_OutlineMapper)
+      localStorage->m_OutlineMapper->ReleaseGraphicsResources(renderWindow);
+  }
+
+  m_LSH.ClearLocalStorage(renderer);
+}
+
 // set the two points defining the textured plane according to the dimension and spacing
 void mitk::LabelSetImageVtkMapper2D::GeneratePlane(mitk::BaseRenderer *renderer, double planeBounds[6])
 {

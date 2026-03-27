@@ -38,6 +38,51 @@ QmitkRenderWindowWidget::~QmitkRenderWindowWidget()
         this, &QmitkRenderWindowWidget::SetCrosshairPosition));
   }
   this->DisableCrosshair();
+  this->ReleaseCornerAnnotation();
+}
+
+void QmitkRenderWindowWidget::PrepareForGraphicsShutdown()
+{
+  if (m_RenderWindow == nullptr)
+  {
+    return;
+  }
+
+  bool contextAcquired = false;
+  if (m_RenderWindow->context() != nullptr)
+  {
+    m_RenderWindow->makeCurrent();
+    contextAcquired = true;
+  }
+
+  this->ReleaseCornerAnnotation();
+  m_RenderWindow->PrepareForGraphicsShutdown();
+
+  if (contextAcquired)
+    m_RenderWindow->doneCurrent();
+}
+
+void QmitkRenderWindowWidget::ReleaseCornerAnnotation()
+{
+  if (m_CornerAnnotation == nullptr || m_RenderWindow == nullptr)
+  {
+    return;
+  }
+
+  auto* vtkRenderWindow = m_RenderWindow->GetVtkRenderWindow();
+  auto* renderer = m_RenderWindow->GetRenderer();
+  auto* vtkRenderer = renderer != nullptr ? renderer->GetVtkRenderer() : nullptr;
+
+  m_CornerAnnotation->SetVisibility(false);
+  m_CornerAnnotation->SetText(0, "");
+
+  if (vtkRenderWindow != nullptr)
+    m_CornerAnnotation->ReleaseGraphicsResources(vtkRenderWindow);
+
+  if (vtkRenderer != nullptr && vtkRenderer->HasViewProp(m_CornerAnnotation) != 0)
+    vtkRenderer->RemoveViewProp(m_CornerAnnotation);
+
+  m_CornerAnnotation = nullptr;
 }
 
 void QmitkRenderWindowWidget::SetDataStorage(mitk::DataStorage* dataStorage)

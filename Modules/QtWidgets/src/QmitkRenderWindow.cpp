@@ -72,7 +72,41 @@ QmitkRenderWindow::QmitkRenderWindow(QWidget *parent, const QString &name, mitk:
 
 QmitkRenderWindow::~QmitkRenderWindow()
 {
+  PrepareForGraphicsShutdown();
   Destroy(); // Destroy mitkRenderWindowBase
+
+  if (this->context() != nullptr)
+  {
+    this->makeCurrent();
+    this->setRenderWindow(static_cast<vtkGenericOpenGLRenderWindow*>(nullptr));
+    m_InternalRenderWindow = nullptr;
+    this->doneCurrent();
+  }
+  else
+  {
+    this->setRenderWindow(static_cast<vtkGenericOpenGLRenderWindow*>(nullptr));
+    m_InternalRenderWindow = nullptr;
+  }
+}
+
+void QmitkRenderWindow::PrepareForGraphicsShutdown()
+{
+  // The menu widget keeps a smart pointer to the MITK renderer. Drop that
+  // reference before explicit graphics shutdown so the renderer can die while
+  // the render-window context is still available.
+  if (m_MenuWidget != nullptr)
+  {
+    delete m_MenuWidget;
+    m_MenuWidget = nullptr;
+    m_MenuWidgetActivated = false;
+  }
+
+  this->PrepareForShutdown();
+}
+
+void QmitkRenderWindow::DestroyMitkRenderWindowBase()
+{
+  Destroy();
 }
 
 void QmitkRenderWindow::SetResendQtEvents(bool resend)

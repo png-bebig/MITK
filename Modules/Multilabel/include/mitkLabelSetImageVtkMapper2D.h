@@ -71,6 +71,7 @@ namespace mitk
     /** \brief Checks whether this mapper needs to update itself and generate
      * data. */
     void Update(mitk::BaseRenderer *renderer) override;
+    void ReleaseGraphicsResources(mitk::BaseRenderer *renderer) override;
 
     //### methods of MITK-VTK rendering pipeline
     vtkProp *GetVtkProp(mitk::BaseRenderer *renderer) override;

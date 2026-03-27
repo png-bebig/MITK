@@ -66,12 +66,34 @@ bool mitk::RenderWindowBase::HandleEvent(InteractionEvent *interactionEvent)
   return m_Renderer->GetDispatcher()->ProcessEvent(interactionEvent);
 }
 
+void mitk::RenderWindowBase::PrepareForShutdown()
+{
+  if (m_Renderer.IsNull() || m_RenderProp == nullptr)
+    return;
+
+  auto* vtkRenderWindow = this->GetVtkRenderWindow();
+  auto* vtkRenderer = m_Renderer->GetVtkRenderer();
+
+  if (vtkRenderWindow != nullptr)
+    m_RenderProp->ReleaseGraphicsResources(vtkRenderWindow);
+
+  if (vtkRenderer != nullptr && vtkRenderer->HasViewProp(m_RenderProp) != 0)
+    vtkRenderer->RemoveViewProp(m_RenderProp);
+
+  m_RenderProp->Delete();
+  m_RenderProp = nullptr;
+}
+
 void mitk::RenderWindowBase::Destroy()
 {
   RenderingManager::GetInstance()->RemoveRenderWindow(GetVtkRenderWindow());
-  m_Renderer->GetVtkRenderer()->RemoveViewProp(m_RenderProp);
-  m_RenderProp->Delete();
+  PrepareForShutdown();
+
   BaseRenderer::RemoveInstance(this->GetVtkRenderWindow());
+
+  // Drop the renderer while the surrounding widget still owns a valid VTK
+  // render window so renderer teardown can unregister itself cleanly.
+  m_Renderer = nullptr;
 }
 
 mitk::RenderWindowBase::~RenderWindowBase()

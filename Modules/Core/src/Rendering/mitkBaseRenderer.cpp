@@ -217,8 +217,17 @@ mitk::BaseRenderer::BaseRenderer(const char *name,
 
 mitk::BaseRenderer::~BaseRenderer()
 {
+  if (m_VtkRenderer != nullptr && m_RenderWindow != nullptr)
+  {
+    if (auto *layerController = mitk::VtkLayerController::GetInstance(m_RenderWindow))
+    {
+      layerController->RemoveRenderer(m_VtkRenderer);
+    }
+  }
+
   if (m_VtkRenderer != nullptr)
   {
+    m_VtkRenderer->SetRenderWindow(nullptr);
     m_VtkRenderer->Delete();
     m_VtkRenderer = nullptr;
   }

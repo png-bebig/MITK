@@ -53,6 +53,7 @@ namespace mitk
     virtual mitk::VtkPropRenderer *GetRenderer();
     virtual vtkRenderWindow *GetVtkRenderWindow() = 0;
     virtual vtkRenderWindowInteractor *GetVtkRenderWindowInteractor() = 0;
+    void PrepareForShutdown();
 
     virtual bool HandleEvent(InteractionEvent *interactionEvent);
 

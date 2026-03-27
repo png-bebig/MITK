@@ -81,6 +81,7 @@ public:
   bool IsCornerAnnotationVisible() const;
   void SetCornerAnnotationText(const std::string& cornerAnnotation);
   std::string GetCornerAnnotationText() const;
+  void PrepareForGraphicsShutdown();
 
   bool IsRenderWindowMenuActivated() const;
 
@@ -105,6 +106,7 @@ private:
 
   void InitializeGUI();
   void InitializeDecorations();
+  void ReleaseCornerAnnotation();
   void ResetGeometry(const mitk::TimeGeometry* referenceGeometry);
 
   QString m_WidgetName;
