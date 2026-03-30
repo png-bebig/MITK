@@ -588,6 +588,15 @@ find_package(Git REQUIRED)
 if(MITK_USE_SUPERBUILD)
   include("${CMAKE_CURRENT_SOURCE_DIR}/SuperBuild.cmake")
 
+  # Forward product-specific component installs to the nested MITK build.
+  # The superbuild wrapper only includes the nested install script for the
+  # default component, which would otherwise make `cmake --install <superbuild>`
+  # a no-op for SagiPlan's dedicated prod/dev components.
+  install(CODE "include(\"${CMAKE_BINARY_DIR}/MITK-build/cmake_install.cmake\")"
+    COMPONENT prod)
+  install(CODE "include(\"${CMAKE_BINARY_DIR}/MITK-build/cmake_install.cmake\")"
+    COMPONENT dev)
+
   # Print configuration summary
   message("\n\n")
   feature_summary(
