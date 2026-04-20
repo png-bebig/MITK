@@ -258,6 +258,16 @@ namespace mitk
     virtual void ReleaseGraphicsResources(vtkWindow *renWin);
 
     /**
+     * \brief Final render-window shutdown hook for renderer-owned overlay state.
+     *
+     * This is intended to run while a valid graphics context is still current.
+     * It clears overlay text actors and detaches the hidden text renderer so
+     * VTK can free any pass and texture state before the render window is
+     * finalized.
+     */
+    virtual void PrepareForShutdown(vtkWindow *renWin);
+
+    /**
      * \brief Return the current map of mappers sorted by layer.
      * \return The mappers map keyed by layer index.
      */

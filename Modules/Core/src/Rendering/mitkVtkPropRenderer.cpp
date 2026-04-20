@@ -113,7 +113,18 @@ mitk::VtkPropRenderer::~VtkPropRenderer()
   if (m_CellPicker != nullptr)
     m_CellPicker->Delete();
   if (m_TextRenderer != nullptr)
+  {
+    if (m_RenderWindow != nullptr)
+      m_TextRenderer->ReleaseGraphicsResources(m_RenderWindow);
+
+    m_TextRenderer->SetUseDepthPeeling(false);
+    m_TextRenderer->SetUseDepthPeelingForVolumes(false);
+    m_TextRenderer->SetPass(nullptr);
+    m_TextRenderer->RemoveAllViewProps();
+    m_TextRenderer->SetRenderWindow(nullptr);
     m_TextRenderer->Delete();
+    m_TextRenderer = nullptr;
+  }
 }
 
 void mitk::VtkPropRenderer::SetDataStorage(mitk::DataStorage *storage)
@@ -587,8 +598,33 @@ vtkAssemblyPath *mitk::VtkPropRenderer::GetNextPath()
   return m_Paths ? m_Paths->GetNextItem() : nullptr;
 }
 
-void mitk::VtkPropRenderer::ReleaseGraphicsResources(vtkWindow * /*renWin*/)
+void mitk::VtkPropRenderer::ReleaseGraphicsResources(vtkWindow *renWin)
 {
+  if (renWin != nullptr)
+  {
+    for (const auto &textEntry : m_TextCollection)
+    {
+      if (textEntry.second != nullptr)
+        textEntry.second->ReleaseGraphicsResources(renWin);
+    }
+  }
+
+  if (m_TextRenderer != nullptr)
+  {
+    m_TextRenderer->SetUseDepthPeeling(false);
+    m_TextRenderer->SetUseDepthPeelingForVolumes(false);
+    m_TextRenderer->SetPass(nullptr);
+
+    if (renWin != nullptr)
+      m_TextRenderer->ReleaseGraphicsResources(renWin);
+
+    m_TextRenderer->RemoveAllViewProps();
+  }
+
+  auto *currentWorldPlaneGeometryVtkMapper = dynamic_cast<VtkMapper *>(m_CurrentWorldPlaneGeometryMapper.GetPointer());
+  if (currentWorldPlaneGeometryVtkMapper != nullptr)
+    currentWorldPlaneGeometryVtkMapper->ReleaseGraphicsResources(this);
+
   if (m_DataStorage.IsNull())
     return;
 
@@ -608,6 +644,34 @@ void mitk::VtkPropRenderer::ReleaseGraphicsResources(vtkWindow * /*renWin*/)
       if (vtkmapper)
         vtkmapper->ReleaseGraphicsResources(this);
     }
+  }
+}
+
+void mitk::VtkPropRenderer::PrepareForShutdown(vtkWindow *renWin)
+{
+  for (const auto &textEntry : m_TextCollection)
+  {
+    if (textEntry.second == nullptr)
+      continue;
+
+    if (renWin != nullptr)
+      textEntry.second->ReleaseGraphicsResources(renWin);
+
+    textEntry.second->Delete();
+  }
+  m_TextCollection.clear();
+
+  if (m_TextRenderer != nullptr)
+  {
+    m_TextRenderer->SetUseDepthPeeling(false);
+    m_TextRenderer->SetUseDepthPeelingForVolumes(false);
+    m_TextRenderer->SetPass(nullptr);
+
+    if (renWin != nullptr)
+      m_TextRenderer->ReleaseGraphicsResources(renWin);
+
+    m_TextRenderer->RemoveAllViewProps();
+    m_TextRenderer->SetRenderWindow(nullptr);
   }
 }
 
